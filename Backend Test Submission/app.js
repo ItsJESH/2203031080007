@@ -1,15 +1,21 @@
 require("dotenv").config();
 const express = require("express");
 const bodyParser = require("body-parser");
+const cookieParser = require("cookie-parser");
+
 
 const app = express();
 const port = process.env.PORT || 8383;
 
+ app.use(cookieParser());
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(express.urlencoded({ extended: true }));
 
-app.use("/",(req,res)=>{
+const shorturlRoutes = require("./routes/shorturlRoute");
+app.use("/shorturls",shorturlRoutes)
+
+app.get("/",(req,res)=>{
     res.send("URL SHORTENER")
 });
 
