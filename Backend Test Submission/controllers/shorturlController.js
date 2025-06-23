@@ -69,10 +69,14 @@ exports.createshorturl = async (req, res) => {
         let finalShortcode = shortcode;
 
         if (finalShortcode) {
+            if(finalShortcode.length!=5){
+                return res.status(409).json({ error: `Shortcode "${finalShortcode}" not has enough Length` })
+            }
             if (urls[finalShortcode]) {
                 return res.status(409).json({ error: `Shortcode "${finalShortcode}" is already in use.` });
             }
-        } else {
+        }
+        else {
             finalShortcode = generateUniqueShortcode(urls);
         }
 
@@ -83,7 +87,7 @@ exports.createshorturl = async (req, res) => {
             createdAt: createdAt.toISOString(),
             expiresAt: expiresAt.toISOString(),
             validityMinutes: validityMinutes,
-            clicks: []  
+            clicks: 0
         };
 
         await writeUrls(urls);
@@ -112,19 +116,19 @@ exports.getshorturl = async (req, res) => {
             return res.status(404).json({ error: 'Short URL not found.' });
         }
 
-        const clicksArray = Array.isArray(urlEntry.clicks) ? urlEntry.clicks : [];
+        if (typeof urlEntry.clicks !== 'number') {
+            urlEntry.clicks = 0;
+        }
+        urlEntry.clicks += 1;
+
+        await writeUrls(urls);
 
         const stats = {
             shortcode: shortcode,
-            totalClicks: clicksArray.length,
             originalUrl: urlEntry.originalUrl,
             creationDate: urlEntry.createdAt,
             expiryDate: urlEntry.expiresAt,
-            detailedClicks: clicksArray.map(click => ({
-                timestamp: click.timestamp,
-                source: click.referrer,
-                location: click.location
-            }))
+            Clicks: urlEntry.clicks
         };
 
         res.status(200).json(stats);
